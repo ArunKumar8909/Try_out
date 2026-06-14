@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>A Special Question 💌</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blush:    #FFF0F3;
+      --rose:     #FF6B8A;
+      --deep:     #C9184A;
+      --card:     #FFFFFF;
+      --text:     #2D2020;
+      --muted:    #9B7F85;
+      --border:   #FFD6E0;
+    }
+
+    body {
+      min-height: 100vh;
+      background: var(--blush);
+      font-family: 'Inter', sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* ── Floating hearts bg ── */
+    #hearts-canvas {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Pages ── */
+    .page {
+      display: none;
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 480px;
+      padding: 24px;
+      animation: fadeUp .5s ease both;
+    }
+    .page.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border-radius: 24px;
+      padding: 44px 36px 40px;
+      box-shadow: 0 8px 48px rgba(201,24,74,.10), 0 2px 8px rgba(0,0,0,.04);
+      border: 1.5px solid var(--border);
+      text-align: center;
+    }
+
+    .emoji { font-size: 2.6rem; margin-bottom: 18px; display: block; }
+
+    .card h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.7rem;
+      line-height: 1.35;
+      color: var(--text);
+      margin-bottom: 10px;
+    }
+
+    .card .subtitle {
+      font-size: .88rem;
+      color: var(--muted);
+      letter-spacing: .03em;
+      margin-bottom: 36px;
+    }
+
+    /* ── Choice buttons ── */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .choice-btn {
+      padding: 18px 12px;
+      border-radius: 16px;
+      border: 2px solid var(--border);
+      background: var(--blush);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all .22s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+    .choice-btn .btn-icon { font-size: 1.6rem; }
+
+    .choice-btn.yes:hover, .choice-btn.yes:focus {
+      background: var(--rose);
+      border-color: var(--rose);
+      color: #fff;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(255,107,138,.35);
+    }
+    .choice-btn.no:hover, .choice-btn.no:focus {
+      background: #f1f1f1;
+      border-color: #ccc;
+      color: #666;
+      transform: translateY(-3px);
+    }
+
+    /* ── No response ── */
+    .no-msg {
+      margin-top: 16px;
+      font-size: .82rem;
+      color: var(--muted);
+      min-height: 20px;
+      font-style: italic;
+    }
+
+    /* ── Form inputs ── */
+    .field { margin-bottom: 24px; text-align: left; }
+
+    .field label {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.05rem;
+      color: var(--text);
+      display: block;
+      margin-bottom: 10px;
+    }
+    .field label small {
+      display: block;
+      font-family: 'Inter', sans-serif;
+      font-size: .78rem;
+      font-weight: 400;
+      color: var(--muted);
+      font-style: italic;
+      margin-top: 3px;
+    }
+
+    .field input, .field textarea {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      font-family: 'Inter', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      background: var(--blush);
+      outline: none;
+      transition: border .2s, box-shadow .2s;
+      resize: none;
+    }
+    .field input::placeholder, .field textarea::placeholder { color: #c8a8b0; }
+    .field input:focus, .field textarea:focus {
+      border-color: var(--rose);
+      box-shadow: 0 0 0 3px rgba(255,107,138,.14);
+    }
+
+    /* ── Submit btn ── */
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, var(--rose), var(--deep));
+      color: #fff;
+      border: none;
+      border-radius: 14px;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      letter-spacing: .03em;
+      transition: opacity .2s, transform .2s, box-shadow .2s;
+      margin-top: 8px;
+    }
+    .submit-btn:hover {
+      opacity: .92;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(201,24,74,.3);
+    }
+    .submit-btn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+    /* ── Thank-you page ── */
+    .thankyou-icon { font-size: 3.5rem; display: block; margin-bottom: 18px; }
+
+    /* ── Divider ── */
+    .divider {
+      border: none;
+      border-top: 1.5px dashed var(--border);
+      margin: 28px 0;
+    }
+
+    @media (max-width: 400px) {
+      .card { padding: 32px 22px 28px; }
+      .card h1 { font-size: 1.45rem; }
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="hearts-canvas"></canvas>
+
+<!-- PAGE 1 : The Question -->
+<div class="page active" id="page1">
+  <div class="card">
+    <span class="emoji">💌</span>
+    <h1>Is it okay...<br>can we meet on<br>30th July?</h1>
+    <p class="subtitle">Just you and me — a little something special ✨</p>
+
+    <div class="choices">
+      <button class="choice-btn yes" onclick="goYes()">
+        <span class="btn-icon">🥰</span>
+        Yes!
+      </button>
+      <button class="choice-btn no" id="noBtn" onclick="sayNo()">
+        <span class="btn-icon">😔</span>
+        No
+      </button>
+    </div>
+
+    <p class="no-msg" id="noMsg"></p>
+  </div>
+</div>
+
+<!-- PAGE 2 : Details Form -->
+<div class="page" id="page2">
+  <div class="card">
+    <span class="emoji">📍</span>
+    <h1>Perfect! Let's plan it 🌸</h1>
+    <p class="subtitle">Just a couple of quick things…</p>
+
+    <hr class="divider" />
+
+    <!--
+      ══════════════════════════════════════════════════
+      HOW TO RECEIVE HER ANSWERS IN YOUR EMAIL:
+      1. Go to https://formspree.io  →  sign up free
+      2. Create a new form → copy your form endpoint
+      3. Replace  YOUR_FORMSPREE_ID  below with it
+         e.g.  https://formspree.io/f/xpwzjklq
+      ══════════════════════════════════════════════════
+    -->
+    <form id="detailsForm"
+          action="https://formspree.io/f/mgobrrgy"
+          method="POST">
+
+      <div class="field">
+        <label>
+          📌 Location to pick you up
+          <small>Where should I come to get you?</small>
+        </label>
+        <input type="text"
+               name="Pickup Location"
+               placeholder="e.g. Home, hostel, college gate…"
+               required />
+      </div>
+
+      <div class="field">
+        <label>
+          🗺️ Any specific place you'd like to go?
+          <small>Totally your call — or leave it as a surprise!</small>
+        </label>
+        <textarea name="Desired Destination"
+                  rows="3"
+                  placeholder="e.g. A café, mall, beach, or just surprise me…"></textarea>
+      </div>
+
+      <!-- Hidden fields so you know who filled the form -->
+      <input type="hidden" name="Date" value="30th July" />
+      <input type="hidden" name="_subject" value="She said YES 🎉" />
+
+      <button type="submit" class="submit-btn" id="submitBtn">
+        Confirm — Let's make it happen! 🌹
+      </button>
+    </form>
+  </div>
+</div>
+
+<!-- PAGE 3 : Thank You -->
+<div class="page" id="page3">
+  <div class="card">
+    <span class="thankyou-icon">🎉</span>
+    <h1 style="font-style:italic;">It's a date!</h1>
+    <p class="subtitle" style="margin-top:12px; font-size:.95rem; line-height:1.7;">
+      I've got your details and I'm already looking forward to 30th July. 
+      Can't wait to see you. 💕
+    </p>
+  </div>
+</div>
+
+<script>
+  /* ── Floating hearts canvas ── */
+  (function () {
+    const canvas = document.getElementById('hearts-canvas');
+    const ctx = canvas.getContext('2d');
+    let hearts = [];
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    function spawnHeart() {
+      hearts.push({
+        x: Math.random() * canvas.width,
+        y: canvas.height + 20,
+        size: 10 + Math.random() * 18,
+        speed: 0.5 + Math.random() * 0.8,
+        opacity: 0.12 + Math.random() * 0.18,
+        drift: (Math.random() - 0.5) * 0.6,
+        rot: (Math.random() - 0.5) * 0.04,
+        angle: 0,
+      });
+    }
+
+    function drawHeart(ctx, x, y, size, angle, opacity) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.globalAlpha = opacity;
+      ctx.fillStyle = '#FF6B8A';
+      ctx.beginPath();
+      ctx.moveTo(0, -size * 0.3);
+      ctx.bezierCurveTo( size * 0.5, -size,  size,  size * 0.1, 0,  size * 0.7);
+      ctx.bezierCurveTo(-size,        size * 0.1, -size * 0.5, -size, 0, -size * 0.3);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    let frame = 0;
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (frame++ % 55 === 0) spawnHeart();
+      hearts = hearts.filter(h => h.y > -40);
+      hearts.forEach(h => {
+        h.y   -= h.speed;
+        h.x   += h.drift;
+        h.angle += h.rot;
+        drawHeart(ctx, h.x, h.y, h.size, h.angle, h.opacity);
+      });
+      requestAnimationFrame(loop);
+    }
+    loop();
+  })();
+
+  /* ── No button playful responses ── */
+  const noLines = [
+    "Aww… are you sure? 🥺",
+    "Please? Pretty please? 🙏",
+    "I'll bring snacks! 🍰",
+    "Come on, it'll be fun! ✨",
+    "Last chance… 😢",
+    "Okay okay, I'll stop. 😅",
+  ];
+  let noCount = 0;
+
+  function sayNo() {
+    const msg = document.getElementById('noMsg');
+    const btn = document.getElementById('noBtn');
+    if (noCount < noLines.length - 1) {
+      msg.textContent = noLines[noCount++];
+      /* Wiggle the Yes button to draw attention */
+      const yesBtn = document.querySelector('.choice-btn.yes');
+      yesBtn.style.transition = 'transform .1s';
+      yesBtn.style.transform = 'scale(1.08)';
+      setTimeout(() => yesBtn.style.transform = '', 300);
+    } else {
+      msg.textContent = noLines[noLines.length - 1];
+      btn.disabled = true;
+    }
+  }
+
+  function goYes() {
+    document.getElementById('page1').classList.remove('active');
+    const p2 = document.getElementById('page2');
+    p2.classList.add('active');
+    // Re-trigger animation
+    p2.style.animation = 'none';
+    requestAnimationFrame(() => p2.style.animation = '');
+  }
+
+  /* ── Form submit ── */
+  const form = document.getElementById('detailsForm');
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending… 💌';
+
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: new FormData(form),
+        headers: { Accept: 'application/json' },
+      });
+
+      if (res.ok) {
+        document.getElementById('page2').classList.remove('active');
+        const p3 = document.getElementById('page3');
+        p3.classList.add('active');
+        p3.style.animation = 'none';
+        requestAnimationFrame(() => p3.style.animation = '');
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Something went wrong — try again 🥺';
+      }
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Network error — please try again';
+    }
+  });
+</script>
+</body>
+</html>
